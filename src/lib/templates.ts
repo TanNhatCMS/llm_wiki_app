@@ -637,11 +637,124 @@ ${BASE_CONTRADICTION}
 `,
 }
 
+const projectManagementTemplate: WikiTemplate = {
+  id: "project-management",
+  name: "Project Management",
+  description: "Track tasks, milestones, requirements, and project documentation",
+  icon: "📋",
+  extraDirs: ["wiki/tasks", "wiki/milestones", "wiki/requirements", "wiki/docs"],
+  schema: `# Wiki Schema — Project Management
+
+## Page Types
+
+| Type | Directory | Purpose |
+|------|-----------|---------|
+${BASE_SCHEMA_TYPES}
+| task | wiki/tasks/ | Individual action items or features |
+| milestone | wiki/milestones/ | Major project phases or deliverables |
+| requirement | wiki/requirements/ | Functional or technical requirements |
+| doc | wiki/docs/ | Technical or user documentation |
+
+## Naming Conventions
+
+${BASE_NAMING}
+- Tasks: task identifier or slug (e.g., \`TASK-001-setup-db.md\`)
+- Milestones: \`vX.Y-slug.md\` (e.g., \`v1.0-beta-release.md\`)
+- Requirements: \`REQ-NNN-slug.md\` (e.g., \`REQ-001-auth.md\`)
+- Docs: descriptive slug (e.g., \`architecture-overview.md\`)
+
+## Frontmatter
+
+${BASE_FRONTMATTER}
+
+Task pages also include:
+\`\`\`yaml
+status: todo | in-progress | review | done
+assignee: ""
+priority: low | medium | high
+\`\`\`
+
+Milestone pages also include:
+\`\`\`yaml
+status: pending | active | completed
+due_date: YYYY-MM-DD
+\`\`\`
+
+Requirement pages also include:
+\`\`\`yaml
+type: functional | technical | business
+priority: must | should | could | wont
+status: draft | approved | implemented
+\`\`\`
+
+## Index Format
+
+${BASE_INDEX_FORMAT}
+
+## Log Format
+
+${BASE_LOG_FORMAT}
+
+## Cross-referencing Rules
+
+${BASE_CROSSREF}
+- Tasks reference the milestone they belong to via \`related:\`
+- Requirements link to the tasks that implement them
+- Milestone pages list all their associated requirements and tasks
+
+## Contradiction Handling
+
+${BASE_CONTRADICTION}
+`,
+  purpose: `# Project Purpose — Project Management
+
+## Project Context
+
+**Project Name:**
+**Objective:**
+**Timeline:**
+
+## Key Milestones
+
+<!-- High-level list — create detailed pages in wiki/milestones/ -->
+
+-
+-
+
+## Core Requirements (Summary)
+
+<!-- High-level list — create detailed pages in wiki/requirements/ -->
+
+-
+-
+
+## Current Sprint / Active Tasks
+
+<!-- Tasks currently in flight — create pages in wiki/tasks/ -->
+
+-
+-
+
+## Success Criteria
+
+<!-- How will we know the project is successful? -->
+
+-
+
+## Risks and Mitigation
+
+<!-- Known risks and how they are handled -->
+
+-
+`,
+}
+
 export const templates: WikiTemplate[] = [
   researchTemplate,
   readingTemplate,
   personalTemplate,
   businessTemplate,
+  projectManagementTemplate,
   generalTemplate,
 ]
 

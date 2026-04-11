@@ -9,15 +9,16 @@ import i18n from "@/i18n"
 import { saveLanguage } from "@/lib/project-store"
 
 const PROVIDERS = [
-  { value: "openai" as const, label: "OpenAI", models: ["gpt-4o", "gpt-4.1", "gpt-4o-mini"] },
-  { value: "anthropic" as const, label: "Anthropic", models: ["claude-sonnet-4-5-20250514", "claude-opus-4-5-20250514", "claude-haiku-4-5-20251001"] },
-  { value: "google" as const, label: "Google", models: ["gemini-2.5-pro", "gemini-2.5-flash"] },
+  { value: "openai" as const, label: "OpenAI", models: ["gpt-4o", "gpt-4.1", "gpt-4o-mini","gpt-4o-nano", "gpt-5.4", "gpt-5.4-mini","gpt-5.4-nano","gpt-5.4-pro"] },
+  { value: "anthropic" as const, label: "Anthropic", models: ["claude-haiku-4-5-20251001", "claude-sonnet-4-6", "claude-opus-4-6"] },
+  { value: "google" as const, label: "Google", models: ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-3.1-flash-lite-preview", "gemini-3.1-pro-preview"] },
   { value: "ollama" as const, label: "Ollama (Local)", models: [] },
   { value: "custom" as const, label: "Custom", models: [] },
 ]
 
 const LANGUAGES = [
   { value: "en", label: "English" },
+  { value: "vi", label: "Tiếng Việt" },
   { value: "zh", label: "中文" },
 ]
 
@@ -90,11 +91,10 @@ export function SettingsView() {
                 <button
                   key={lang.value}
                   onClick={() => handleLanguageChange(lang.value)}
-                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                    currentLang === lang.value
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border hover:bg-accent"
-                  }`}
+                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${currentLang === lang.value
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border hover:bg-accent"
+                    }`}
                 >
                   {lang.label}
                 </button>
@@ -117,11 +117,10 @@ export function SettingsView() {
                       setProvider(p.value)
                       setModel(p.models[0] || "")
                     }}
-                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                      provider === p.value
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:bg-accent"
-                    }`}
+                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${provider === p.value
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border hover:bg-accent"
+                      }`}
                   >
                     {p.label}
                   </button>
@@ -182,11 +181,10 @@ export function SettingsView() {
                       <button
                         key={m}
                         onClick={() => setModel(m)}
-                        className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                          model === m
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border hover:bg-accent"
-                        }`}
+                        className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${model === m
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border hover:bg-accent"
+                          }`}
                       >
                         {m}
                       </button>
@@ -234,15 +232,15 @@ export function SettingsView() {
                 {[
                   { value: "none" as const, label: "Disabled" },
                   { value: "tavily" as const, label: "Tavily" },
+                  { value: "duckduckgo" as const, label: "DuckDuckGo" },
                 ].map((p) => (
                   <button
                     key={p.value}
                     onClick={() => setSearchProvider(p.value)}
-                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                      searchProvider === p.value
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:bg-accent"
-                    }`}
+                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${searchProvider === p.value
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border hover:bg-accent"
+                      }`}
                   >
                     {p.label}
                   </button>
@@ -250,7 +248,7 @@ export function SettingsView() {
               </div>
             </div>
 
-            {searchProvider !== "none" && (
+            {searchProvider !== "none" && searchProvider !== "duckduckgo" && (
               <div className="space-y-2">
                 <Label htmlFor="searchApiKey">API Key</Label>
                 <Input
@@ -277,11 +275,10 @@ export function SettingsView() {
                   <button
                     key={n}
                     onClick={() => setMaxHistoryMessages(n)}
-                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                      maxHistoryMessages === n
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:bg-accent"
-                    }`}
+                    className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${maxHistoryMessages === n
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border hover:bg-accent"
+                      }`}
                   >
                     {n}
                   </button>
@@ -346,9 +343,8 @@ function ContextSizeSelector({ value, onChange }: { value: number; onChange: (v:
             key={preset.value}
             type="button"
             onClick={() => onChange(preset.value)}
-            className={`text-[9px] px-0.5 ${
-              i === closestIndex ? "text-primary font-bold" : "text-muted-foreground/50"
-            }`}
+            className={`text-[9px] px-0.5 ${i === closestIndex ? "text-primary font-bold" : "text-muted-foreground/50"
+              }`}
           >
             {preset.label}
           </button>

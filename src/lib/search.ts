@@ -20,6 +20,8 @@ const STOP_WORDS = new Set([
   "do", "does", "did", "be", "been", "being", "have", "has", "had",
   "it", "its", "in", "on", "at", "to", "for", "of", "with", "by",
   "this", "that", "these", "those",
+  "là", "và", "của", "các", "có", "cho", "để", "những", "một", "trong",
+  "đã", "đang", "được", "với", "không", "thì", "mà", "như", "này", "khi"
 ])
 
 export function tokenizeQuery(query: string): string[] {

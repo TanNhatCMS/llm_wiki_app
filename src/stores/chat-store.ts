@@ -31,6 +31,7 @@ interface ChatState {
   mode: "chat" | "ingest"
   ingestSource: string | null
   maxHistoryMessages: number
+  activeToolCall: { name: string; args: any; status: "calling" | "done"; result?: any } | null
 
   // Conversation management
   createConversation: () => string
@@ -50,6 +51,7 @@ interface ChatState {
   clearMessages: () => void
   setMaxHistoryMessages: (n: number) => void
   removeLastAssistantMessage: () => void  // for regenerate: remove last assistant reply
+  setToolCall: (call: ChatState["activeToolCall"]) => void
 
   // Helpers
   getActiveMessages: () => DisplayMessage[]
@@ -75,6 +77,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   mode: "chat",
   ingestSource: null,
   maxHistoryMessages: 10,
+  activeToolCall: null,
 
   createConversation: () => {
     const id = generateConversationId()
@@ -225,6 +228,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!activeConversationId) return []
     return messages.filter((m) => m.conversationId === activeConversationId)
   },
+
+  setToolCall: (activeToolCall) => set({ activeToolCall }),
 }))
 
 export function chatMessagesToLLM(messages: DisplayMessage[]): ChatMessage[] {

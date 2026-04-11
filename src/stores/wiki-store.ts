@@ -2,7 +2,7 @@ import { create } from "zustand"
 import type { WikiProject, FileNode } from "@/types/wiki"
 
 interface LlmConfig {
-  provider: "openai" | "anthropic" | "google" | "ollama" | "custom"
+  provider: "openai" | "anthropic" | "google" | "ollama" | "custom" | "perplexity" | "vertex" | "deepseek" | "mistral" | "groq" | "xai" | "togetherai" | "cohere" | "alibaba"
   apiKey: string
   model: string
   ollamaUrl: string
@@ -11,7 +11,7 @@ interface LlmConfig {
 }
 
 interface SearchApiConfig {
-  provider: "tavily" | "none"
+  provider: "tavily" | "duckduckgo" | "none"
   apiKey: string
 }
 

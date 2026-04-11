@@ -11,12 +11,9 @@ import {
 import { useWikiStore } from "@/stores/wiki-store"
 import { readFile, writeFile, listDirectory } from "@/commands/fs"
 import { lastQueryPages } from "@/components/chat/chat-panel"
-import type { DisplayMessage } from "@/stores/chat-store"
+import { useChatStore, type DisplayMessage } from "@/stores/chat-store"
 import type { FileNode } from "@/types/wiki"
-
-import { convertLatexToUnicode } from "@/lib/latex-to-unicode"
-import { enrichWithWikilinks } from "@/lib/enrich-wikilinks"
-import { normalizePath, getFileName } from "@/lib/path-utils"
+import { Message, MessageContent, MessageActions, MessageAction } from "@/components/ai-elements/message"
 
 // Module-level cache of source file names
 let cachedSourceFiles: string[] = []
@@ -64,54 +61,35 @@ export function ChatMessage({ message, isLastAssistant, onRegenerate }: ChatMess
   const [hovered, setHovered] = useState(false)
 
   return (
-    <div
-      className={`flex gap-2 ${isUser ? "flex-row-reverse" : "flex-row"}`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-          isSystem
-            ? "bg-accent text-accent-foreground"
-            : isUser
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
-        }`}
-      >
-        {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-      </div>
-      <div className="max-w-[80%] flex flex-col gap-1.5">
-        <div
-          className={`rounded-lg px-3 py-2 text-sm ${
-            isUser
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-foreground"
-          }`}
-        >
-          {isUser ? (
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
-          ) : (
-            <MarkdownContent content={message.content} />
+    <Message from={message.role as "user" | "assistant" | "system"} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <MessageContent>
+        {isUser ? (
+          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        ) : (
+          <MarkdownContent content={message.content} />
+        )}
+      </MessageContent>
+      {isAssistant && (
+        <div className="w-full flex-col gap-1 mt-1">
+          <CitedReferencesPanel content={message.content} savedReferences={message.references} />
+          {hovered && (
+            <MessageActions>
+              <SaveToWikiButton content={message.content} visible={true} />
+              {isLastAssistant && onRegenerate && (
+                <button
+                  type="button"
+                  onClick={onRegenerate}
+                  className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                  title="Regenerate this response"
+                >
+                  <RefreshCw className="h-3 w-3" /> Regenerate
+                </button>
+              )}
+            </MessageActions>
           )}
         </div>
-        {isAssistant && <CitedReferencesPanel content={message.content} savedReferences={message.references} />}
-        {isAssistant && hovered && (
-          <div className="flex items-center gap-1">
-            <SaveToWikiButton content={message.content} visible={true} />
-            {isLastAssistant && onRegenerate && (
-              <button
-                type="button"
-                onClick={onRegenerate}
-                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                title="Regenerate this response"
-              >
-                <RefreshCw className="h-3 w-3" /> Regenerate
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </Message>
   )
 }
 
@@ -426,13 +404,12 @@ interface StreamingMessageProps {
 export function StreamingMessage({ content }: StreamingMessageProps) {
   const { thinking, answer } = useMemo(() => separateThinking(content), [content])
   const isThinking = thinking !== null && answer.length === 0
+  const activeToolCall = useChatStore((s) => s.activeToolCall)
 
   return (
-    <div className="flex gap-2 flex-row">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <Bot className="h-4 w-4" />
-      </div>
-      <div className="max-w-[80%] rounded-lg px-3 py-2 text-sm bg-muted text-foreground">
+    <Message from="assistant">
+      <MessageContent>
+        {activeToolCall && <ToolCallBlock call={activeToolCall} />}
         {isThinking ? (
           <StreamingThinkingBlock content={thinking} />
         ) : (
@@ -442,7 +419,36 @@ export function StreamingMessage({ content }: StreamingMessageProps) {
             <span className="animate-pulse">▊</span>
           </>
         )}
+      </MessageContent>
+    </Message>
+  )
+}
+
+function ToolCallBlock({ call }: { call: any }) {
+  const { name, args, status } = call
+  
+  // Choose icon based on tool name
+  const isSearch = name === "web_search"
+  const isDoc = name.includes("wiki_page")
+  
+  return (
+    <div className="mb-2 flex items-center gap-2 rounded-md border border-blue-500/20 bg-blue-50/30 dark:bg-blue-950/20 px-2 py-1.5 text-xs text-blue-700 dark:text-blue-400">
+      <div className="relative">
+        {status === "calling" ? (
+          <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
+        ) : (
+          <div className="h-3 w-3 rounded-full bg-green-500" />
+        )}
       </div>
+      <span className="font-medium">
+        {status === "calling" ? `Action: ${name}...` : `Completed: ${name}`}
+      </span>
+      {status === "calling" && args.query && (
+        <span className="truncate opacity-70">"{args.query}"</span>
+      )}
+      {status === "calling" && args.path && (
+        <span className="truncate opacity-70 italic">{args.path}</span>
+      )}
     </div>
   )
 }

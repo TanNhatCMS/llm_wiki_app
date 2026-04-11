@@ -36,15 +36,14 @@ function detectCommunities(
     return { assignments: new Map(), communities: [] }
   }
 
-  const g = new Graph()
+  const g = new Graph({ type: "undirected", multi: false })
   for (const node of nodes) {
     g.addNode(node.id)
   }
   for (const edge of edges) {
     if (g.hasNode(edge.source) && g.hasNode(edge.target)) {
-      const key = `${edge.source}->${edge.target}`
-      if (!g.hasEdge(key) && !g.hasEdge(`${edge.target}->${edge.source}`)) {
-        g.addEdgeWithKey(key, edge.source, edge.target, { weight: edge.weight })
+      if (!g.hasEdge(edge.source, edge.target)) {
+        g.addEdge(edge.source, edge.target, { weight: edge.weight })
       }
     }
   }

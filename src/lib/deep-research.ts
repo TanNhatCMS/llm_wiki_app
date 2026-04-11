@@ -5,6 +5,7 @@ import { writeFile, readFile, listDirectory } from "@/commands/fs"
 import { useWikiStore, type LlmConfig, type SearchApiConfig } from "@/stores/wiki-store"
 import { useResearchStore } from "@/stores/research-store"
 import { normalizePath } from "@/lib/path-utils"
+import { getPrompts } from "@/i18n/prompts"
 
 let processing = false
 
@@ -112,27 +113,9 @@ async function executeResearch(
       // no index yet
     }
 
-    const systemPrompt = [
-      "You are a research assistant. Synthesize the web search results into a comprehensive wiki page.",
-      "",
-      "## Language Rule",
-      "- ALWAYS match the language of the research topic. If the topic is in Chinese, write in Chinese. If in English, write in English.",
-      "",
-      "## Cross-referencing (IMPORTANT)",
-      "- The wiki already has existing pages listed in the Wiki Index below.",
-      "- When your synthesis mentions an entity or concept that exists in the wiki, ALWAYS use [[wikilink]] syntax to link to it.",
-      "- For example, if the wiki has an entity 'anthropic', write [[anthropic]] when mentioning it.",
-      "- This is critical for connecting new research to existing knowledge in the graph.",
-      "",
-      "## Writing Rules",
-      "- Organize into clear sections with headings",
-      "- Cite web sources using [N] notation",
-      "- Note contradictions or gaps",
-      "- Suggest additional sources worth finding",
-      "- Neutral, encyclopedic tone",
-      "",
-      wikiIndex ? `## Existing Wiki Index (link to these pages with [[wikilink]])\n${wikiIndex}` : "",
-    ].filter(Boolean).join("\n")
+    const prompts = getPrompts()
+    const systemPrompt = prompts.deepResearchSystemPrompt(wikiIndex)
+    const userMessage = prompts.deepResearchUserMessage(topic, searchContext)
 
     let accumulated = ""
 
@@ -140,7 +123,7 @@ async function executeResearch(
       llmConfig,
       [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Research topic: **${topic}**\n\n## Web Search Results\n\n${searchContext}\n\nSynthesize into a wiki page.` },
+        { role: "user", content: userMessage },
       ],
       {
         onToken: (token) => {

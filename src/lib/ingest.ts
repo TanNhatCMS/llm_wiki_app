@@ -7,6 +7,7 @@ import { useActivityStore } from "@/stores/activity-store"
 import { useReviewStore, type ReviewItem } from "@/stores/review-store"
 import { getFileName, normalizePath } from "@/lib/path-utils"
 import { checkIngestCache, saveIngestCache } from "@/lib/ingest-cache"
+import { getPrompts } from "@/i18n/prompts"
 
 const FILE_BLOCK_REGEX = /---FILE:\s*([^\n-]+?)\s*---\n([\s\S]*?)---END FILE---/g
 
@@ -62,12 +63,13 @@ export async function autoIngest(
   // key entities, concepts, main arguments, connections to existing wiki, contradictions
   activity.updateItem(activityId, { detail: "Step 1/2: Analyzing source..." })
 
+  const prompts = getPrompts()
   let analysis = ""
 
   await streamChat(
     llmConfig,
     [
-      { role: "system", content: buildAnalysisPrompt(purpose, index) },
+      { role: "system", content: prompts.buildAnalysisPrompt(purpose, index, LANGUAGE_RULE) },
       { role: "user", content: `Analyze this source document:\n\n**File:** ${fileName}\n\n---\n\n${truncatedContent}` },
     ],
     {
@@ -93,7 +95,7 @@ export async function autoIngest(
   await streamChat(
     llmConfig,
     [
-      { role: "system", content: buildGenerationPrompt(schema, purpose, index, fileName, overview) },
+      { role: "system", content: prompts.buildGenerationPrompt(schema, purpose, index, fileName, overview, LANGUAGE_RULE) },
       {
         role: "user",
         content: [
@@ -285,153 +287,7 @@ function parseReviewBlocks(
   return items
 }
 
-/**
- * Step 1 prompt: AI reads the source and produces a structured analysis.
- * This is the "discussion" step — the AI reasons about the source before writing wiki pages.
- */
-function buildAnalysisPrompt(purpose: string, index: string): string {
-  return [
-    "You are an expert research analyst. Read the source document and produce a structured analysis.",
-    "",
-    LANGUAGE_RULE,
-    "",
-    "Your analysis should cover:",
-    "",
-    "## Key Entities",
-    "List people, organizations, products, datasets, tools mentioned. For each:",
-    "- Name and type",
-    "- Role in the source (central vs. peripheral)",
-    "- Whether it likely already exists in the wiki (check the index)",
-    "",
-    "## Key Concepts",
-    "List theories, methods, techniques, phenomena. For each:",
-    "- Name and brief definition",
-    "- Why it matters in this source",
-    "- Whether it likely already exists in the wiki",
-    "",
-    "## Main Arguments & Findings",
-    "- What are the core claims or results?",
-    "- What evidence supports them?",
-    "- How strong is the evidence?",
-    "",
-    "## Connections to Existing Wiki",
-    "- What existing pages does this source relate to?",
-    "- Does it strengthen, challenge, or extend existing knowledge?",
-    "",
-    "## Contradictions & Tensions",
-    "- Does anything in this source conflict with existing wiki content?",
-    "- Are there internal tensions or caveats?",
-    "",
-    "## Recommendations",
-    "- What wiki pages should be created or updated?",
-    "- What should be emphasized vs. de-emphasized?",
-    "- Any open questions worth flagging for the user?",
-    "",
-    "Be thorough but concise. Focus on what's genuinely important.",
-    "",
-    purpose ? `## Wiki Purpose (for context)\n${purpose}` : "",
-    index ? `## Current Wiki Index (for checking existing content)\n${index}` : "",
-  ].filter(Boolean).join("\n")
-}
 
-/**
- * Step 2 prompt: AI takes its own analysis and generates wiki files + review items.
- */
-function buildGenerationPrompt(schema: string, purpose: string, index: string, sourceFileName: string, overview?: string): string {
-  // Use original filename (without extension) as the source summary page name
-  const sourceBaseName = sourceFileName.replace(/\.[^.]+$/, "")
-
-  return [
-    "You are a wiki maintainer. Based on the analysis provided, generate wiki files.",
-    "",
-    LANGUAGE_RULE,
-    "",
-    `## IMPORTANT: Source File`,
-    `The original source file is: **${sourceFileName}**`,
-    `All wiki pages generated from this source MUST include this filename in their frontmatter \`sources\` field.`,
-    "",
-    "## Output Format",
-    "",
-    "Output each wiki file in this exact format:",
-    "",
-    "---FILE: wiki/sources/filename.md---",
-    "(complete file content with YAML frontmatter)",
-    "---END FILE---",
-    "",
-    "Generate:",
-    `1. A source summary page at **wiki/sources/${sourceBaseName}.md** (MUST use this exact path)`,
-    "2. Entity pages in wiki/entities/ for key entities identified in the analysis",
-    "3. Concept pages in wiki/concepts/ for key concepts identified in the analysis",
-    "4. An updated wiki/index.md — add new entries to existing categories, preserve all existing entries",
-    "5. A log entry for wiki/log.md (just the new entry to append, format: ## [YYYY-MM-DD] ingest | Title)",
-    "6. An updated wiki/overview.md — a high-level summary of what the entire wiki covers, updated to reflect the newly ingested source. This should be a comprehensive 2-5 paragraph overview of ALL topics in the wiki, not just the new source.",
-    "",
-    "## Frontmatter Rules (CRITICAL)",
-    "",
-    "Every page MUST have YAML frontmatter with these fields:",
-    "```yaml",
-    "---",
-    "type: source | entity | concept | comparison | query | synthesis",
-    "title: Human-readable title",
-    "created: YYYY-MM-DD",
-    "updated: YYYY-MM-DD",
-    "tags: []",
-    "related: []",
-    `sources: [\"${sourceFileName}\"]  # MUST contain the original source filename`,
-    "---",
-    "```",
-    "",
-    `The \`sources\` field MUST always contain "${sourceFileName}" — this links the wiki page back to the original uploaded document.`,
-    "",
-    "Other rules:",
-    "- Use [[wikilink]] syntax for cross-references between pages",
-    "- Use kebab-case filenames",
-    "- Follow the analysis recommendations on what to emphasize",
-    "- If the analysis found connections to existing pages, add cross-references",
-    "",
-    "## Review Items",
-    "",
-    "After the FILE blocks, output REVIEW blocks for anything that needs human judgment:",
-    "",
-    "---REVIEW: type | Title---",
-    "Description of what needs the user's attention.",
-    "OPTIONS: (see allowed options below)",
-    "PAGES: wiki/page1.md, wiki/page2.md",
-    "SEARCH: search query 1 | search query 2 | search query 3",
-    "---END REVIEW---",
-    "",
-    "Review types and when to use:",
-    "- contradiction: the analysis found conflicts with existing wiki content",
-    "- duplicate: an entity/concept might already exist under a different name in the index",
-    "- missing-page: an important concept is referenced but has no dedicated page",
-    "- suggestion: ideas for further research, related sources to look for, or connections worth exploring",
-    "",
-    "## OPTIONS Rules (CRITICAL — only use these predefined options):",
-    "",
-    "For each review type, use ONLY these allowed OPTIONS:",
-    "",
-    "- contradiction: OPTIONS: Create Page | Skip",
-    "- duplicate: OPTIONS: Create Page | Skip",
-    "- missing-page: OPTIONS: Create Page | Skip",
-    "- suggestion: OPTIONS: Create Page | Skip",
-    "",
-    "The user also has a 'Deep Research' button (auto-added by the system) that triggers web search.",
-    "Do NOT invent custom option labels. Only use 'Create Page' and 'Skip'.",
-    "",
-    "IMPORTANT for suggestion and missing-page types:",
-    "- The SEARCH field must contain 2-3 web search queries optimized for finding relevant papers, articles, or documentation.",
-    "- These should be specific, keyword-rich queries suitable for a search engine — NOT titles or sentences.",
-    "- Example: for a suggestion about 'automated debt detection in AI-generated code', good SEARCH queries would be:",
-    "  SEARCH: automated technical debt detection AI generated code | software quality metrics LLM code generation | static analysis tools agentic software development",
-    "",
-    "Only create reviews for things that genuinely need human input. Don't create trivial reviews.",
-    "",
-    purpose ? `## Wiki Purpose\n${purpose}` : "",
-    schema ? `## Wiki Schema\n${schema}` : "",
-    index ? `## Current Wiki Index (preserve all existing entries, add new ones)\n${index}` : "",
-    overview ? `## Current Overview (update this to reflect the new source)\n${overview}` : "",
-  ].filter(Boolean).join("\n")
-}
 
 function getStore() {
   return useChatStore.getState()
@@ -468,29 +324,9 @@ export async function startIngest(
 
   const fileName = getFileName(sp)
 
-  const systemPrompt = [
-    "You are a knowledgeable assistant helping to build a wiki from source documents.",
-    "",
-    LANGUAGE_RULE,
-    "",
-    purpose ? `## Wiki Purpose\n${purpose}` : "",
-    schema ? `## Wiki Schema\n${schema}` : "",
-    index ? `## Current Wiki Index\n${index}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n\n")
-
-  const userMessage = [
-    `I'm ingesting the following source file into my wiki: **${fileName}**`,
-    "",
-    "Please read it carefully and present the key takeaways, important concepts, and information that would be valuable to capture in the wiki. Highlight anything that relates to the wiki's purpose and schema.",
-    "",
-    "---",
-    `**File: ${fileName}**`,
-    "```",
-    sourceContent || "(empty file)",
-    "```",
-  ].join("\n")
+  const prompts = getPrompts()
+  const systemPrompt = prompts.ingestSystemPrompt(purpose, schema, index, LANGUAGE_RULE)
+  const userMessage = prompts.ingestUserMessage(fileName, sourceContent)
 
   store.addMessage("user", userMessage)
   store.setStreaming(true)
@@ -537,27 +373,8 @@ export async function executeIngestWrites(
     .filter((m) => m.role !== "system")
     .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))
 
-  const writePrompt = [
-    "Based on our discussion, please generate the wiki files that should be created or updated.",
-    "",
-    userGuidance ? `Additional guidance: ${userGuidance}` : "",
-    "",
-    schema ? `## Wiki Schema\n${schema}` : "",
-    index ? `## Current Wiki Index\n${index}` : "",
-    "",
-    "Output ONLY the file contents in this exact format for each file:",
-    "```",
-    "---FILE: wiki/path/to/file.md---",
-    "(file content here)",
-    "---END FILE---",
-    "```",
-    "",
-    "For wiki/log.md, include a log entry to append. For all other files, output the complete file content.",
-    "Use relative paths from the project root (e.g., wiki/sources/topic.md).",
-    "Do not include any other text outside the FILE blocks.",
-  ]
-    .filter((line) => line !== undefined)
-    .join("\n")
+  const prompts = getPrompts()
+  const writePrompt = prompts.ingestWritePrompt(userGuidance || "", schema, index)
 
   conversationHistory.push({ role: "user", content: writePrompt })
 
@@ -566,14 +383,7 @@ export async function executeIngestWrites(
 
   let accumulated = ""
 
-  const systemPrompt = [
-    "You are a wiki generation assistant. Your task is to produce structured wiki file contents.",
-    "",
-    LANGUAGE_RULE,
-    schema ? `## Wiki Schema\n${schema}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n\n")
+  const systemPrompt = prompts.ingestWriteSystemPrompt(schema, LANGUAGE_RULE)
 
   await streamChat(
     llmConfig,

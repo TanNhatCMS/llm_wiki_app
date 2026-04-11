@@ -1,7 +1,10 @@
 {
   "app": {
     "title": "LLM Wiki",
-    "subtitle": "Build and maintain your personal knowledge base with LLMs"
+    "subtitle": "Build and maintain your personal knowledge base with LLMs",
+    "loading": "Loading...",
+    "failedToOpen": "Failed to open project: {{err}}",
+    "openWikiProject": "Open Wiki Project"
   },
   "nav": {
     "wiki": "Wiki",
@@ -23,6 +26,9 @@
     "name": "Project Name",
     "namePlaceholder": "my-research-wiki",
     "parentDir": "Parent Directory",
+    "selectParentDir": "Select Parent Directory",
+    "nameAndPathRequired": "Name and path are required",
+    "pathPlaceholder": "/Users/you/projects",
     "template": "Template",
     "cancel": "Cancel",
     "create": "Create",
@@ -105,5 +111,31 @@
   },
   "fileTree": {
     "noProject": "No project open"
+  },
+  "templates": {
+    "research": {
+      "name": "Research",
+      "description": "Deep-dive research with hypothesis tracking and methodology notes"
+    },
+    "reading": {
+      "name": "Reading",
+      "description": "Track a book's characters, themes, plot threads, and chapter notes"
+    },
+    "personal": {
+      "name": "Personal Growth",
+      "description": "Track goals, habits, reflections, and journal entries for self-improvement"
+    },
+    "business": {
+      "name": "Business",
+      "description": "Manage meetings, decisions, projects, and stakeholder context for a team"
+    },
+    "project-management": {
+      "name": "Project Management",
+      "description": "Track tasks, milestones, requirements, and project documentation"
+    },
+    "general": {
+      "name": "General",
+      "description": "Minimal setup — a blank slate for any purpose"
+    }
   }
 }

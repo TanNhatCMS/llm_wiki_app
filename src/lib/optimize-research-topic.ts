@@ -1,6 +1,8 @@
 import { streamChat } from "./llm-client"
 import type { LlmConfig } from "@/stores/wiki-store"
 
+import { getPrompts } from "@/i18n/prompts"
+
 export interface OptimizedTopic {
   topic: string
   searchQueries: string[]
@@ -18,30 +20,8 @@ export async function optimizeResearchTopic(
   overview: string,
   purpose: string,
 ): Promise<OptimizedTopic> {
-  const prompt = [
-    "You are a research assistant. Given a knowledge gap found in a personal wiki, generate a precise research topic and search queries.",
-    "",
-    "## Wiki Context",
-    purpose ? `### Purpose\n${purpose}` : "",
-    overview ? `### Current Overview\n${overview}` : "",
-    "",
-    "## Knowledge Gap",
-    `Type: ${gapType}`,
-    `Title: ${gapTitle}`,
-    `Description: ${gapDescription}`,
-    "",
-    "## Task",
-    "Generate a research topic and search queries that are specific to this wiki's domain and purpose.",
-    "The topic should precisely describe what information would fill this knowledge gap.",
-    "The search queries should be optimized for web search engines — keyword-rich, specific, not generic.",
-    "",
-    "## Output Format (STRICT — follow exactly, no other text)",
-    "Respond with EXACTLY 4 lines, no more:",
-    "TOPIC: <one sentence>",
-    "QUERY: <query 1>",
-    "QUERY: <query 2>",
-    "QUERY: <query 3>",
-  ].filter(Boolean).join("\n")
+  const prompts = getPrompts()
+  const prompt = prompts.optimizeResearchPrompt(gapType, gapTitle, gapDescription, overview, purpose)
 
   let result = ""
 

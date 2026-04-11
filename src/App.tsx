@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { open } from "@tauri-apps/plugin-dialog"
 import i18n from "@/i18n"
 import { useWikiStore } from "@/stores/wiki-store"
@@ -20,6 +21,7 @@ function App() {
   const setFileTree = useWikiStore((s) => s.setFileTree)
   const setSelectedFile = useWikiStore((s) => s.setSelectedFile)
   const setActiveView = useWikiStore((s) => s.setActiveView)
+  const { t } = useTranslation()
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -121,7 +123,7 @@ function App() {
       const validated = await openProject(proj.path)
       await handleProjectOpened(validated)
     } catch (err) {
-      window.alert(`Failed to open project: ${err}`)
+      window.alert(t("app.failedToOpen", { err }))
     }
   }
 
@@ -129,14 +131,14 @@ function App() {
     const selected = await open({
       directory: true,
       multiple: false,
-      title: "Open Wiki Project",
+      title: t("app.openWikiProject"),
     })
     if (!selected) return
     try {
       const proj = await openProject(selected)
       await handleProjectOpened(proj)
     } catch (err) {
-      window.alert(`Failed to open project: ${err}`)
+      window.alert(t("app.failedToOpen", { err }))
     }
   }
 
@@ -149,7 +151,7 @@ function App() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">
-        Loading...
+        {t("app.loading")}
       </div>
     )
   }

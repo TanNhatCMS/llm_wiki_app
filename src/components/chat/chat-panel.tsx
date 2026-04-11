@@ -13,6 +13,7 @@ import { buildRetrievalGraph, getRelatedNodes } from "@/lib/graph-relevance"
 import { useReviewStore } from "@/stores/review-store"
 import type { FileNode } from "@/types/wiki"
 import { normalizePath, getFileName, getRelativePath } from "@/lib/path-utils"
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation"
 
 // Store the page mapping from the last query so SourceFilesBar can show which pages were cited
 export let lastQueryPages: { title: string; path: string }[] = []
@@ -129,6 +130,7 @@ export function ChatPanel() {
   const finalizeStream = useChatStore((s) => s.finalizeStream)
   const createConversation = useChatStore((s) => s.createConversation)
   const removeLastAssistantMessage = useChatStore((s) => s.removeLastAssistantMessage)
+  const setToolCall = useChatStore((s) => s.setToolCall)
   const maxHistoryMessages = useChatStore((s) => s.maxHistoryMessages)
 
   // Derive active messages via selector to re-render on message changes
@@ -330,13 +332,22 @@ export function ChatPanel() {
             accumulated += token
             appendStreamToken(token)
           },
+          onToolCall: (name, args) => {
+            setToolCall({ name, args, status: "calling" })
+          },
+          onToolResult: (name, result) => {
+            setToolCall({ name, args: {}, status: "done", result })
+            // Clear status after 1 second
+            setTimeout(() => setToolCall(null), 1000)
+          },
           onDone: () => {
             finalizeStream(accumulated, queryRefs)
+            setToolCall(null)
             abortRef.current = null
-            // save-worthy detection removed — user has direct "Save to Wiki" button on each message
           },
           onError: (err) => {
             finalizeStream(`Error: ${err.message}`, undefined)
+            setToolCall(null)
             abortRef.current = null
           },
         },
@@ -399,55 +410,51 @@ export function ChatPanel() {
     <div className="flex h-full flex-row overflow-hidden">
       <ConversationSidebar />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {!activeConversationId ? (
-          <div className="flex flex-1 items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <MessageSquare className="mx-auto mb-3 h-8 w-8 opacity-30" />
-              <p className="text-sm">Start a new conversation</p>
-              <p className="mt-1 text-xs opacity-60">Click "New Chat" to begin</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div
-              ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto px-3 py-2"
-            >
-              <div className="flex flex-col gap-3">
-                {activeMessages.map((msg, idx) => {
-                  // Check if this is the last assistant message
-                  const isLastAssistant = msg.role === "assistant" &&
-                    !activeMessages.slice(idx + 1).some((m) => m.role === "assistant")
-                  return (
-                    <ChatMessage
-                      key={msg.id}
-                      message={msg}
-                      isLastAssistant={isLastAssistant && !isStreaming}
-                      onRegenerate={isLastAssistant ? handleRegenerate : undefined}
-                    />
-                  )
-                })}
-                {isStreaming && <StreamingMessage content={streamingContent} />}
-                <div ref={bottomRef} />
+        <div className="flex flex-1 flex-col overflow-hidden relative">
+          {!activeConversationId ? (
+            <div className="flex flex-1 items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <MessageSquare className="mx-auto mb-3 h-8 w-8 opacity-30" />
+                <p className="text-sm">Start a new conversation</p>
+                <p className="mt-1 text-xs opacity-60">Click "New Chat" to begin</p>
               </div>
             </div>
+          ) : (
+            <>
+              <Conversation>
+                <ConversationContent>
+                  {activeMessages.map((msg, idx) => {
+                    const isLastAssistant = msg.role === "assistant" &&
+                      !activeMessages.slice(idx + 1).some((m) => m.role === "assistant")
+                    return (
+                      <ChatMessage
+                        key={msg.id}
+                        message={msg}
+                        isLastAssistant={isLastAssistant && !isStreaming}
+                        onRegenerate={isLastAssistant ? handleRegenerate : undefined}
+                      />
+                    )
+                  })}
+                  {isStreaming && <StreamingMessage content={streamingContent} />}
+                </ConversationContent>
+                <ConversationScrollButton />
+              </Conversation>
 
-            {showWriteButton && (
-              <div className="border-t px-3 py-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleWriteToWiki}
-                  className="w-full gap-2"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Write to Wiki
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+              {showWriteButton && (
+                <div className="border-t px-3 py-2 bg-background/80 backdrop-blur-sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleWriteToWiki}
+                    className="w-full gap-2"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Write to Wiki
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
 
         <ChatInput
           onSend={handleSend}

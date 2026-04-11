@@ -1,0 +1,141 @@
+{
+  "app": {
+    "title": "LLM Wiki",
+    "subtitle": "Xây dựng và duy trì cơ sở tri thức cá nhân của bạn với LLM",
+    "loading": "Đang tải...",
+    "failedToOpen": "Không thể mở dự án: {{err}}",
+    "openWikiProject": "Mở dự án Wiki"
+  },
+  "nav": {
+    "wiki": "Wiki",
+    "sources": "Nguồn",
+    "search": "Tìm kiếm",
+    "graph": "Biểu đồ",
+    "lint": "Kiểm tra",
+    "review": "Đánh giá",
+    "settings": "Cài đặt",
+    "switchProject": "Chuyển dự án"
+  },
+  "welcome": {
+    "newProject": "Dự án mới",
+    "openProject": "Mở dự án",
+    "recentProjects": "Dự án gần đây"
+  },
+  "project": {
+    "createTitle": "Tạo dự án Wiki mới",
+    "name": "Tên dự án",
+    "namePlaceholder": "my-research-wiki",
+    "parentDir": "Thư mục cha",
+    "selectParentDir": "Chọn thư mục cha",
+    "nameAndPathRequired": "Tên và đường dẫn là bắt buộc",
+    "pathPlaceholder": "/User/bạn/dự-án",
+    "template": "Mẫu",
+    "cancel": "Hủy",
+    "create": "Tạo",
+    "creating": "Đang tạo..."
+  },
+  "sources": {
+    "title": "Nguồn dữ liệu thô",
+    "import": "Nhập",
+    "importing": "Đang nhập...",
+    "noSources": "Chưa có nguồn nào",
+    "importHint": "Nhập tài liệu để bắt đầu xây dựng wiki của bạn",
+    "importFiles": "Nhập tệp",
+    "ingest": "Xử lý",
+    "delete": "Xóa nguồn và các trang wiki liên quan",
+    "deleteConfirm": "Xóa \"{{name}}\" và các trang wiki liên quan?\n\nThao tác này sẽ:\n- Xóa tệp nguồn\n- Xóa các trang wiki được tạo từ nguồn này\n- Cập nhật index.md",
+    "sourceCount": "{{count}} nguồn",
+    "sourceCount_plural": "{{count}} nguồn"
+  },
+  "chat": {
+    "placeholder": "Hỏi về wiki của bạn...",
+    "ingestPlaceholder": "Thảo luận về nguồn hoặc đặt câu hỏi tiếp theo...",
+    "saveToWiki": "Lưu vào Wiki",
+    "saving": "Đang lưu...",
+    "saved": "Đã lưu!",
+    "writeToWiki": "Ghi vào Wiki",
+    "emptyHint": "Hãy đặt câu hỏi hoặc bắt đầu xử lý nguồn để bắt đầu.",
+    "sources": "Nguồn"
+  },
+  "search": {
+    "title": "Tìm kiếm",
+    "placeholder": "Tìm kiếm trang wiki...",
+    "noResults": "Không tìm thấy kết quả",
+    "startSearching": "Nhập để tìm kiếm các trang wiki"
+  },
+  "lint": {
+    "title": "Kiểm tra",
+    "runLint": "Chạy kiểm tra",
+    "running": "Đang chạy...",
+    "semantic": "Ngữ nghĩa (LLM)",
+    "allClear": "Mọi thứ ổn — không phát hiện vấn đề",
+    "orphan": "Trang mồ côi",
+    "brokenLink": "Liên kết hỏng",
+    "noOutlinks": "Không có liên kết ra",
+    "contradiction": "Mâu thuẫn",
+    "stale": "Nội dung lỗi thời",
+    "missingPage": "Trang bị thiếu",
+    "suggestion": "Gợi ý"
+  },
+  "review": {
+    "title": "Đánh giá",
+    "clearResolved": "Xóa mục đã xử lý",
+    "allClear": "Mọi thứ ổn — không có gì cần đánh giá"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "llmProvider": "Nhà cung cấp LLM",
+    "provider": "Nhà cung cấp",
+    "apiKey": "Khóa API",
+    "apiKeyPlaceholder": "Nhập khóa API {{provider}} của bạn",
+    "model": "Mô hình",
+    "customModel": "Hoặc nhập tên mô hình tùy chỉnh",
+    "ollamaUrl": "URL Ollama",
+    "customEndpoint": "Endpoint API (tương thích OpenAI)",
+    "customEndpointHint": "Bất kỳ endpoint API tương thích OpenAI (ví dụ: LiteLLM, vLLM, LocalAI, Azure OpenAI)",
+    "customApiKey": "Nhập khóa API (nếu cần)",
+    "modelPlaceholder": "Nhập tên mô hình",
+    "save": "Lưu cài đặt",
+    "saved": "Đã lưu!",
+    "language": "Ngôn ngữ",
+    "languageHint": "Ngôn ngữ giao diện (nội dung wiki sẽ theo ngôn ngữ của tài liệu nguồn)"
+  },
+  "preview": {
+    "selectFile": "Chọn một tệp để xem trước",
+    "notAvailable": "Không hỗ trợ xem trước cho loại tệp này"
+  },
+  "activity": {
+    "processing": "Đang xử lý: {{title}}",
+    "done": "Hoàn tất: {{title}}",
+    "clearCompleted": "Xóa đã hoàn tất"
+  },
+  "fileTree": {
+    "noProject": "Chưa mở dự án nào"
+  },
+  "templates": {
+    "research": {
+      "name": "Nghiên cứu",
+      "description": "Nghiên cứu chuyên sâu với theo dõi giả thuyết và ghi chú phương pháp"
+    },
+    "reading": {
+      "name": "Đọc sách",
+      "description": "Theo dõi nhân vật của một cuốn sách, chủ đề, cốt truyện và ghi chú chương"
+    },
+    "personal": {
+      "name": "Phát triển cá nhân",
+      "description": "Theo dõi mục tiêu, thói quen, phản tư và nhật ký để cải thiện bản thân"
+    },
+    "business": {
+      "name": "Kinh doanh",
+      "description": "Quản lý cuộc họp, quyết định, dự án và bối cảnh các bên liên quan cho một nhóm"
+    },
+    "project-management": {
+      "name": "Quản lý dự án",
+      "description": "Theo dõi các nhiệm vụ, cột mốc, yêu cầu và tài liệu dự án"
+    },
+    "general": {
+      "name": "Cơ bản",
+      "description": "Thiết lập tối giản — trống để bắt đầu với mọi mục đích"
+    }
+  }
+}

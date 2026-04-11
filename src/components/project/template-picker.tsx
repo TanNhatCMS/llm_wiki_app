@@ -1,5 +1,6 @@
 import { templates } from "@/lib/templates"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 interface TemplatePickerProps {
   selected: string
@@ -7,6 +8,7 @@ interface TemplatePickerProps {
 }
 
 export function TemplatePicker({ selected, onSelect }: TemplatePickerProps) {
+  const { t } = useTranslation()
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       {templates.map((template) => (
@@ -22,8 +24,8 @@ export function TemplatePicker({ selected, onSelect }: TemplatePickerProps) {
           )}
         >
           <span className="text-xl leading-none">{template.icon}</span>
-          <span className="text-sm font-medium leading-tight">{template.name}</span>
-          <span className="text-xs text-muted-foreground leading-tight">{template.description}</span>
+          <span className="text-sm font-medium leading-tight">{t(`templates.${template.id}.name`)}</span>
+          <span className="text-xs text-muted-foreground leading-tight">{t(`templates.${template.id}.description`)}</span>
         </button>
       ))}
     </div>
